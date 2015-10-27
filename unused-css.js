@@ -3,6 +3,7 @@ $.get('/parh/to/css/file.css').done(function(css){
   
   window.unused = [];
   window.used = [];
+  window.changed = false;
 
   var selectors = 
     _.map(css.split('}'), function(css) {
@@ -22,7 +23,7 @@ $.get('/parh/to/css/file.css').done(function(css){
   for (var i in selectors) {
     if (typeof selectors[i] === 'string' && selectors[i] !== '') {
       // skip pseudo classes
-      if (selectors[i].indexOf(':') !== -1) {
+      if (selectors[i].indexOf(':') !== -1 || selectors[i].substr(selectors[i].length - 1) === '%') {
         continue;
       }
       unused.push(selectors[i]);
@@ -31,6 +32,7 @@ $.get('/parh/to/css/file.css').done(function(css){
   
   function checkCssUssage(){
     var selector = '';
+    console.log('searching');
     for (var i in window.unused) {
       selector = window.unused[i];
       if (typeof selector === 'string' && selector !== '') {
@@ -40,13 +42,21 @@ $.get('/parh/to/css/file.css').done(function(css){
         }
       }
     };
+    return true;
   }
   
   checkCssUssage();
   
-  $("body").bind("DOMSubtreeModified", function() {
+  $("body")
+   .unbind('DOMSubtreeModified')
+   .bind("DOMSubtreeModified", function() {
+     window.changed = true;
     window.setTimeout(function(){
-      checkCssUssage();
-    }, 500);
+      if (window.changed) {
+        window.changed = false;
+        checkCssUssage();
+      }
+    }, 2000);
   });
+  
 });
